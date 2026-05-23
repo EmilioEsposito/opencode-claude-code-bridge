@@ -1,8 +1,8 @@
 # opencode-claude-code-bridge
 
-OpenCode plugin that bridges Claude Code's MCP server configs and the skills bundled inside Claude Code plugins into OpenCode — so switching between the two CLIs (or running them side-by-side) doesn't require re-wiring anything.
+[![npm](https://img.shields.io/npm/v/opencode-claude-code-bridge)](https://www.npmjs.com/package/opencode-claude-code-bridge)
 
-Repo: <https://github.com/EmilioEsposito/opencode-claude-code-bridge>
+OpenCode plugin that bridges Claude Code's MCP server configs and the skills bundled inside Claude Code plugins into OpenCode — so switching between the two CLIs (or running them side-by-side) doesn't require re-wiring anything.
 
 ## What it pulls in
 
