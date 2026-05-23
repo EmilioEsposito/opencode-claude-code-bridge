@@ -4,7 +4,7 @@ import {
   CLAUDE_USER_SETTINGS,
   projectMcpPath,
   projectSettingsPath,
-} from "./paths.ts"
+} from "./paths.js"
 
 export type ClaudeMcpServer = {
   type?: "stdio" | "http" | "sse"

@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "node:fs"
 import { join } from "node:path"
-import { CLAUDE_PLUGINS_INSTALLED } from "./paths.ts"
-import { readUserSettings, readProjectSettings, type ClaudeMcpServer } from "./claude-config.ts"
+import { CLAUDE_PLUGINS_INSTALLED } from "./paths.js"
+import { readUserSettings, readProjectSettings, type ClaudeMcpServer } from "./claude-config.js"
 
 type InstalledEntry = {
   scope: "user" | "project"

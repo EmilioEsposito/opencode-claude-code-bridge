@@ -1,4 +1,4 @@
-import type { ClaudeMcpServer } from "./claude-config.ts"
+import type { ClaudeMcpServer } from "./claude-config.js"
 
 export type OpencodeMcpLocal = {
   type: "local"

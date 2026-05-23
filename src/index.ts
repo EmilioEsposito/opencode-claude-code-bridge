@@ -1,8 +1,8 @@
 import type { Plugin } from "@opencode-ai/plugin"
-import { readUserMcp, readProjectMcp, readProjectSettings, filterProjectMcp } from "./claude-config.ts"
-import { enabledPlugins, readPluginBundledMcp } from "./claude-plugins.ts"
-import { translateAll, type OpencodeMcp } from "./mcp-translate.ts"
-import { bridgeSkills } from "./skill-bridge.ts"
+import { readUserMcp, readProjectMcp, readProjectSettings, filterProjectMcp } from "./claude-config.js"
+import { enabledPlugins, readPluginBundledMcp } from "./claude-plugins.js"
+import { translateAll, type OpencodeMcp } from "./mcp-translate.js"
+import { bridgeSkills } from "./skill-bridge.js"
 
 const DEBUG = process.env.OPENCODE_CLAUDE_CODE_BRIDGE_DEBUG === "1"
 function log(...args: unknown[]): void {

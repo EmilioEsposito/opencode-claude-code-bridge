@@ -1,18 +1,19 @@
 {
   "name": "opencode-claude-code-bridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenCode plugin that bridges Claude Code's MCP servers and plugin-bundled skills into OpenCode.",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "files": [
-    "src",
+    "dist",
     "README.md"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "@opencode-ai/plugin": ">=1.15.0"

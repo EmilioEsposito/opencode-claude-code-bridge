@@ -11,8 +11,8 @@ import {
   statSync,
 } from "node:fs"
 import { join } from "node:path"
-import { BRIDGE_STATE_DIR, OPENCODE_GLOBAL_SKILLS } from "./paths.ts"
-import type { EnabledPlugin } from "./claude-plugins.ts"
+import { BRIDGE_STATE_DIR, OPENCODE_GLOBAL_SKILLS } from "./paths.js"
+import type { EnabledPlugin } from "./claude-plugins.js"
 
 const MANIFEST = join(BRIDGE_STATE_DIR, "skill-bridge.json")
 
