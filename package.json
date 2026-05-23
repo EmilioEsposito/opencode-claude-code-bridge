@@ -1,0 +1,41 @@
+{
+  "name": "opencode-claude-code-bridge",
+  "version": "0.1.0",
+  "description": "OpenCode plugin that bridges Claude Code's MCP servers and plugin-bundled skills into OpenCode.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.15.0"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.15.10",
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "claude-code",
+    "mcp",
+    "bridge"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmilioEsposito/opencode-claude-code-bridge.git"
+  },
+  "homepage": "https://github.com/EmilioEsposito/opencode-claude-code-bridge",
+  "bugs": {
+    "url": "https://github.com/EmilioEsposito/opencode-claude-code-bridge/issues"
+  }
+}
