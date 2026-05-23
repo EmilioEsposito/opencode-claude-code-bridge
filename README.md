@@ -19,11 +19,11 @@ Add the plugin to your OpenCode config (`~/.config/opencode/opencode.jsonc` or p
 
 ```jsonc
 {
-  "plugin": ["opencode-claude-code-bridge"]
+  "plugin": ["opencode-claude-code-bridge@latest"]
 }
 ```
 
-OpenCode will install it from npm on next start.
+OpenCode will install it from npm on next start. The `@latest` tag ensures you automatically get new versions on each restart ([ref](https://github.com/anomalyco/opencode/issues/6159#issuecomment-3691647738)). To pin a specific version instead, use e.g. `"opencode-claude-code-bridge@0.1.1"`.
 
 ## When does OpenCode pick up Claude Code changes?
 
