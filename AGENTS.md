@@ -1,19 +1,48 @@
 # Agent/Developer Context
 
-## Dev shim (local development)
+## Local dev vs. published package
+
+Only one loading mechanism should be active at a time — running both loads the
+plugin twice.
+
+### Published package (default for end users)
+
+In `~/.config/opencode/opencode.jsonc`:
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-claude-code-bridge"]
+}
+```
+OpenCode installs from npm into `~/.config/opencode/node_modules/` on next start.
+
+### Local dev shim (for developing this plugin)
 
 OpenCode auto-discovers plugins by scanning `{plugin,plugins}/*.{ts,js}` under
-`~/.config/opencode/` and `.opencode/`. For local dev, a one-line shim file at
-`~/.config/opencode/plugins/claude-code-bridge.ts` re-exports this repo's entry
-point:
+`~/.config/opencode/`. A one-line shim file bypasses npm and loads source
+directly from your local clone.
 
-```ts
-export { default } from "/Users/eesposito/code/opencode-claude-code-bridge/src/index.ts"
+**To create the shim** (run from this repo):
+```bash
+mkdir -p ~/.config/opencode/plugins
+REPO_DIR="$(pwd)" && echo "export { default } from \"$REPO_DIR/src/index.ts\"" > ~/.config/opencode/plugins/claude-code-bridge.ts
 ```
 
-If the repo moves, update that absolute path. When the package is published to
-npm, end users won't need this shim — they add `"opencode-claude-code-bridge"`
-to their `opencode.jsonc` `plugin` array and OpenCode installs it directly.
+**To remove the shim** (switch back to published package):
+```bash
+rm ~/.config/opencode/plugins/claude-code-bridge.ts
+```
+
+### Switching between them
+
+| Mode | Shim file exists? | `"plugin"` in opencode.jsonc? |
+|---|---|---|
+| Local dev | Yes | No — remove the `"plugin"` array or the entry |
+| Published | No — delete the shim | Yes |
+| Neither (disable) | No | No |
+
+If the repo moves to a different directory, recreate the shim (the command
+above uses `$(pwd)` so it always picks up the current location).
 
 ## How the plugin works
 
