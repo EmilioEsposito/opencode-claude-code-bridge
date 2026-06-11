@@ -49,14 +49,16 @@ export function readProjectMcp(cwd: string): Record<string, ClaudeMcpServer> {
 }
 
 /**
- * Apply Claude's gating semantics for project-level .mcp.json:
- * include a server iff enableAllProjectMcpServers is true OR its name appears in enabledMcpjsonServers.
+ * Import project-level .mcp.json by default so OpenCode can use local MCPs
+ * without a separate Claude approval step. If Claude project settings include
+ * enabledMcpjsonServers, respect that explicit allowlist.
  */
 export function filterProjectMcp(
   servers: Record<string, ClaudeMcpServer>,
   projectSettings: ClaudeSettings,
 ): Record<string, ClaudeMcpServer> {
   if (projectSettings.enableAllProjectMcpServers) return servers
+  if (!Object.prototype.hasOwnProperty.call(projectSettings, "enabledMcpjsonServers")) return servers
   const allow = new Set(projectSettings.enabledMcpjsonServers ?? [])
   if (allow.size === 0) return {}
   const out: Record<string, ClaudeMcpServer> = {}

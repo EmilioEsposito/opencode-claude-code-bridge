@@ -14,7 +14,7 @@ function collectClaudeMcp(cwd: string): Record<string, OpencodeMcp> {
   const userMcp = readUserMcp()
   log("user mcp servers:", Object.keys(userMcp))
 
-  // project-level MCPs from <cwd>/.mcp.json, gated by claude's enable* settings
+  // project-level MCPs from <cwd>/.mcp.json, narrowed by Claude's allowlist when present
   const projectSettings = readProjectSettings(cwd)
   const projectMcp = filterProjectMcp(readProjectMcp(cwd), projectSettings)
   log("project mcp servers (post-gating):", Object.keys(projectMcp))
@@ -33,7 +33,7 @@ function collectClaudeMcp(cwd: string): Record<string, OpencodeMcp> {
   // Merge with later sources winning (project > user > bundled). Project
   // settings are the most specific, so they should take precedence.
   const merged = { ...bundled, ...userMcp, ...projectMcp }
-  return translateAll(merged)
+  return translateAll(merged, { CLAUDE_PROJECT_DIR: cwd })
 }
 
 const plugin: Plugin = async ({ directory }) => {

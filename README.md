@@ -7,9 +7,11 @@ OpenCode plugin that bridges Claude Code's MCP server configs and the skills bun
 ## What it pulls in
 
 - **User-level MCP servers** from `~/.claude.json` (`mcpServers`).
-- **Project-level MCP servers** from `<cwd>/.mcp.json`, gated by Claude's own `enableAllProjectMcpServers` / `enabledMcpjsonServers` keys in `.claude/settings.json`.
+- **Project-level MCP servers** from `<cwd>/.mcp.json`. If `.claude/settings.json` explicitly declares `enabledMcpjsonServers`, that allowlist is respected; otherwise the local file is imported as-is.
 - **Plugin-bundled MCP servers** from any enabled Claude Code plugin (`~/.claude/plugins/installed_plugins.json` ∩ `enabledPlugins`).
 - **Plugin-bundled skills** — symlinked from `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/skills/<name>` into `~/.config/opencode/skills/<name>` (OpenCode already discovers skills at that location).
+
+For MCP definitions that reference `${CLAUDE_PROJECT_DIR}`, the bridge resolves it to OpenCode's current project directory.
 
 Not yet supported (v1): bundled agents, slash commands, hooks.
 
@@ -35,7 +37,7 @@ What that means in practice:
 | --------------------------------------------------------------------- | -------------------------- |
 | Add/remove an MCP server in `~/.claude.json` or `.mcp.json`           | OpenCode restart           |
 | Toggle a plugin in `enabledPlugins`                                   | OpenCode restart           |
-| Flip `enableAllProjectMcpServers` or edit `enabledMcpjsonServers`     | OpenCode restart           |
+| Edit `enabledMcpjsonServers`                                          | OpenCode restart           |
 | Install a new Claude plugin (new entry in `installed_plugins.json`)   | OpenCode restart           |
 | Edit the contents of a skill file (e.g. `SKILL.md` body)              | Immediately — skills are symlinked, not copied |
 

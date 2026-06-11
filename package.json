@@ -1,6 +1,6 @@
 {
   "name": "opencode-claude-code-bridge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenCode plugin that bridges Claude Code's MCP servers and plugin-bundled skills into OpenCode.",
   "type": "module",
   "main": "./dist/index.js",

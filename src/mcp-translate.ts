@@ -16,34 +16,40 @@ export type OpencodeMcpRemote = {
 
 export type OpencodeMcp = OpencodeMcpLocal | OpencodeMcpRemote
 
+type EnvOverrides = Record<string, string | undefined>
+
 /**
  * Expand `${VAR}` and `${VAR:-default}` references using process.env, matching
  * Claude Code's .mcp.json substitution behavior. Unknown vars with no default
  * are left as the empty string (same as Claude).
  */
-export function expandEnv(input: string): string {
+export function expandEnv(input: string, overrides: EnvOverrides = {}): string {
   return input.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}/g, (_, name, def) => {
-    const v = process.env[name]
+    const v = overrides[name] ?? process.env[name]
     if (v !== undefined && v !== "") return v
     return def ?? ""
   })
 }
 
-function expandStrings<T>(value: T): T {
-  if (typeof value === "string") return expandEnv(value) as unknown as T
-  if (Array.isArray(value)) return value.map(expandStrings) as unknown as T
+function expandStrings<T>(value: T, overrides: EnvOverrides): T {
+  if (typeof value === "string") return expandEnv(value, overrides) as unknown as T
+  if (Array.isArray(value)) return value.map((item) => expandStrings(item, overrides)) as unknown as T
   if (value && typeof value === "object") {
     const out: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[k] = expandStrings(v)
+      out[k] = expandStrings(v, overrides)
     }
     return out as T
   }
   return value
 }
 
-export function translate(name: string, claude: ClaudeMcpServer): OpencodeMcp | null {
-  const c = expandStrings(claude)
+export function translate(
+  name: string,
+  claude: ClaudeMcpServer,
+  overrides: EnvOverrides = {},
+): OpencodeMcp | null {
+  const c = expandStrings(claude, overrides)
   const isRemote = c.type === "http" || c.type === "sse" || (!c.type && !!c.url)
   if (isRemote) {
     if (!c.url) return null
@@ -61,10 +67,11 @@ export function translate(name: string, claude: ClaudeMcpServer): OpencodeMcp | 
 
 export function translateAll(
   servers: Record<string, ClaudeMcpServer>,
+  overrides: EnvOverrides = {},
 ): Record<string, OpencodeMcp> {
   const out: Record<string, OpencodeMcp> = {}
   for (const [name, def] of Object.entries(servers)) {
-    const t = translate(name, def)
+    const t = translate(name, def, overrides)
     if (t) out[name] = t
   }
   return out
