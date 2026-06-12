@@ -67,6 +67,11 @@ cd ~/portfolio && OPENCODE_CLAUDE_CODE_BRIDGE_DEBUG=1 opencode mcp list --print-
 - `opencode mcp list --pure` is the baseline (skips all external plugins).
 - `opencode debug skill` lists discovered skills — check that symlinked skills appear.
 
+## Publishing
+
+Use `.claude/skills/publish-package/SKILL.md` for the trusted publishing flow,
+release commands, and post-publish verification.
+
 ## File layout
 
 | File | Purpose |

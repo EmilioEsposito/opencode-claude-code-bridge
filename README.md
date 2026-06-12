@@ -48,3 +48,12 @@ If you have an MCP server name declared in both your `opencode.jsonc` and Claude
 ## Debugging
 
 Set `OPENCODE_CLAUDE_CODE_BRIDGE_DEBUG=1` before launching OpenCode to log which MCPs and plugins were discovered.
+
+## Publishing
+
+This package publishes through GitHub Actions trusted publishing from
+`.github/workflows/publish.yml`.
+
+For maintainer release steps and verification, use:
+
+- `.claude/skills/publish-package/SKILL.md`
