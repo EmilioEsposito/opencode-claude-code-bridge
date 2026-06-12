@@ -1,11 +1,15 @@
 import { homedir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 
 export const HOME = homedir()
 export const CLAUDE_HOME = process.env.CLAUDE_HOME || join(HOME, ".claude")
 export const CLAUDE_USER_CONFIG = join(HOME, ".claude.json")
 export const CLAUDE_USER_SETTINGS = join(CLAUDE_HOME, "settings.json")
 export const CLAUDE_PLUGINS_INSTALLED = join(CLAUDE_HOME, "plugins", "installed_plugins.json")
+export const CLAUDE_MANAGED_SETTINGS =
+  process.env.OPENCODE_CLAUDE_CODE_BRIDGE_MANAGED_SETTINGS ||
+  join("/Library", "Application Support", "ClaudeCode", "managed-settings.json")
+export const CLAUDE_MANAGED_SETTINGS_D = join(dirname(CLAUDE_MANAGED_SETTINGS), "managed-settings.d")
 
 export const OPENCODE_GLOBAL_SKILLS = join(
   process.env.XDG_CONFIG_HOME || join(HOME, ".config"),

@@ -45,6 +45,14 @@ function isOurSymlink(path: string, expectedTarget: string): boolean {
   }
 }
 
+function isSymlink(path: string): boolean {
+  try {
+    return lstatSync(path).isSymbolicLink()
+  } catch {
+    return false
+  }
+}
+
 /**
  * For each enabled Claude plugin that ships a `skills/` directory, ensure a
  * symlink exists at `~/.config/opencode/skills/<skill-name>` pointing at the
@@ -96,6 +104,16 @@ export function bridgeSkills(plugins: EnabledPlugin[]): void {
     if (existsSync(link)) {
       // A real directory or foreign symlink lives here — don't clobber it.
       continue
+    }
+    if (isSymlink(link)) {
+      // `existsSync` follows symlinks, so it is false for dangling links. Replace
+      // stale skill links from prior bridge runs instead of leaving OpenCode with
+      // a broken skill directory.
+      try {
+        unlinkSync(link)
+      } catch {
+        continue
+      }
     }
     try {
       symlinkSync(target, link, "dir")

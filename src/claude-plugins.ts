@@ -1,10 +1,15 @@
 import { readFileSync, existsSync } from "node:fs"
 import { join } from "node:path"
 import { CLAUDE_PLUGINS_INSTALLED } from "./paths.js"
-import { readUserSettings, readProjectSettings, type ClaudeMcpServer } from "./claude-config.js"
+import {
+  readManagedSettings,
+  readUserSettings,
+  readProjectSettings,
+  type ClaudeMcpServer,
+} from "./claude-config.js"
 
 type InstalledEntry = {
-  scope: "user" | "project"
+  scope: string
   projectPath?: string
   installPath: string
   version?: string
@@ -18,7 +23,11 @@ type InstalledFile = {
 export type EnabledPlugin = {
   key: string // "<name>@<marketplace>"
   installPath: string
-  scope: "user" | "project"
+  scope: string
+}
+
+function hasOwn(obj: Record<string, boolean>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key)
 }
 
 function readInstalled(): InstalledFile {
@@ -37,21 +46,39 @@ function readInstalled(): InstalledFile {
 export function enabledPlugins(cwd: string): EnabledPlugin[] {
   const installed = readInstalled()
   if (!installed.plugins) return []
+  const managedEnabled = readManagedSettings().enabledPlugins ?? {}
   const userEnabled = readUserSettings().enabledPlugins ?? {}
   const projectEnabled = readProjectSettings(cwd).enabledPlugins ?? {}
 
   const out: EnabledPlugin[] = []
   for (const [key, entries] of Object.entries(installed.plugins)) {
-    const projectFlag = projectEnabled[key]
-    const userFlag = userEnabled[key]
-    // Project setting overrides user setting when present.
-    const enabled = projectFlag ?? userFlag
+    const managedHasFlag = hasOwn(managedEnabled, key)
+    const projectHasFlag = hasOwn(projectEnabled, key)
+    const userHasFlag = hasOwn(userEnabled, key)
+    // Managed settings are policy, so they win when present. Otherwise mirror
+    // Claude's local precedence: project settings override user settings.
+    const enabled = managedHasFlag
+      ? managedEnabled[key]
+      : projectHasFlag
+        ? projectEnabled[key]
+        : userHasFlag
+          ? userEnabled[key]
+          : false
     if (!enabled) continue
 
-    // Prefer the matching scope's install entry when available.
-    const projectEntry = entries.find((e) => e.scope === "project" && e.projectPath === cwd)
+    // Prefer the matching scope's install entry when available. Claude managed
+    // plugins use scope="managed"; locally installed project plugins may use
+    // either scope="project" or scope="local" depending on Claude Code version.
+    const managedEntry = entries.find((e) => e.scope === "managed")
+    const projectEntry = entries.find(
+      (e) => (e.scope === "project" || e.scope === "local") && e.projectPath === cwd,
+    )
     const userEntry = entries.find((e) => e.scope === "user")
-    const pick = projectEntry ?? userEntry ?? entries[0]
+    const pick = managedHasFlag
+      ? managedEntry ?? projectEntry ?? userEntry ?? entries[0]
+      : projectHasFlag
+        ? projectEntry ?? userEntry ?? managedEntry ?? entries[0]
+        : userEntry ?? projectEntry ?? managedEntry ?? entries[0]
     if (!pick) continue
     out.push({ key, installPath: pick.installPath, scope: pick.scope })
   }

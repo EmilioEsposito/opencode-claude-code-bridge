@@ -1,5 +1,8 @@
-import { readFileSync, existsSync } from "node:fs"
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs"
+import { join } from "node:path"
 import {
+  CLAUDE_MANAGED_SETTINGS,
+  CLAUDE_MANAGED_SETTINGS_D,
   CLAUDE_USER_CONFIG,
   CLAUDE_USER_SETTINGS,
   projectMcpPath,
@@ -30,6 +33,51 @@ function readJson<T>(path: string): T | undefined {
   }
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value)
+}
+
+function deepMerge(base: unknown, next: unknown): unknown {
+  if (Array.isArray(base) && Array.isArray(next)) {
+    const out = [...base]
+    const seen = new Set(out.map((item) => JSON.stringify(item)))
+    for (const item of next) {
+      const key = JSON.stringify(item)
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(item)
+    }
+    return out
+  }
+  if (isPlainObject(base) && isPlainObject(next)) {
+    const out: Record<string, unknown> = { ...base }
+    for (const [key, value] of Object.entries(next)) {
+      out[key] = key in out ? deepMerge(out[key], value) : value
+    }
+    return out
+  }
+  return next
+}
+
+function managedDropInPaths(): string[] {
+  if (!existsSync(CLAUDE_MANAGED_SETTINGS_D)) return []
+  try {
+    return readdirSync(CLAUDE_MANAGED_SETTINGS_D)
+      .filter((name) => name.endsWith(".json") && !name.startsWith("."))
+      .sort()
+      .map((name) => join(CLAUDE_MANAGED_SETTINGS_D, name))
+      .filter((path) => {
+        try {
+          return statSync(path).isFile()
+        } catch {
+          return false
+        }
+      })
+  } catch {
+    return []
+  }
+}
+
 export function readUserMcp(): Record<string, ClaudeMcpServer> {
   const cfg = readJson<{ mcpServers?: Record<string, ClaudeMcpServer> }>(CLAUDE_USER_CONFIG)
   return cfg?.mcpServers ?? {}
@@ -37,6 +85,16 @@ export function readUserMcp(): Record<string, ClaudeMcpServer> {
 
 export function readUserSettings(): ClaudeSettings {
   return readJson<ClaudeSettings>(CLAUDE_USER_SETTINGS) ?? {}
+}
+
+export function readManagedSettings(): ClaudeSettings {
+  let merged: unknown = readJson<Record<string, unknown>>(CLAUDE_MANAGED_SETTINGS) ?? {}
+  for (const path of managedDropInPaths()) {
+    const fragment = readJson<Record<string, unknown>>(path)
+    if (!fragment) continue
+    merged = deepMerge(merged, fragment)
+  }
+  return (isPlainObject(merged) ? merged : {}) as ClaudeSettings
 }
 
 export function readProjectSettings(cwd: string): ClaudeSettings {
