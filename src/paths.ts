@@ -11,11 +11,25 @@ export const CLAUDE_MANAGED_SETTINGS =
   join("/Library", "Application Support", "ClaudeCode", "managed-settings.json")
 export const CLAUDE_MANAGED_SETTINGS_D = join(dirname(CLAUDE_MANAGED_SETTINGS), "managed-settings.d")
 
-export const OPENCODE_GLOBAL_SKILLS = join(
+export const OPENCODE_CONFIG_DIR = join(
   process.env.XDG_CONFIG_HOME || join(HOME, ".config"),
   "opencode",
-  "skills",
 )
+
+export const OPENCODE_GLOBAL_SKILLS = join(OPENCODE_CONFIG_DIR, "skills")
+
+// Skill roots OpenCode auto-discovers, in the order it scans them. The command
+// bridge enumerates these to build TUI slash-command wrappers for every skill.
+// - OPENCODE_GLOBAL_SKILLS holds both OpenCode-native global skills and the
+//   plugin-bundled skills this bridge symlinks in (see skill-bridge.ts).
+// - ~/.claude/skills and ~/.agents/skills are "external" roots OpenCode loads
+//   directly; they are NOT touched by skill-bridge.ts, so the command bridge is
+//   the only place they get slash-command parity.
+export const SKILL_ROOTS = [
+  OPENCODE_GLOBAL_SKILLS,
+  join(CLAUDE_HOME, "skills"),
+  join(HOME, ".agents", "skills"),
+]
 
 export const BRIDGE_STATE_DIR = join(
   process.env.XDG_STATE_HOME || join(HOME, ".local", "state"),

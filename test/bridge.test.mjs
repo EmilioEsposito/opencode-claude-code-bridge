@@ -35,10 +35,10 @@ await writeFile(
     {
       version: 2,
       plugins: {
-        "base@legalzoom-plugins": [
+        "base@example-plugins": [
           { scope: "managed", installPath: join(root, "plugins", "base", "5ad"), version: "5ad" },
         ],
-        "tsindex@legalzoom-plugins": [
+        "tsindex@example-plugins": [
           {
             scope: "managed",
             installPath: join(root, "plugins", "tsindex", "5ad"),
@@ -53,11 +53,11 @@ await writeFile(
 )
 await writeFile(
   managedSettings,
-  JSON.stringify({ enabledPlugins: { "base@legalzoom-plugins": true } }, null, 2),
+  JSON.stringify({ enabledPlugins: { "base@example-plugins": true } }, null, 2),
 )
 await writeFile(
   join(managedDropIns, "30-tsindex.json"),
-  JSON.stringify({ enabledPlugins: { "tsindex@legalzoom-plugins": true } }, null, 2),
+  JSON.stringify({ enabledPlugins: { "tsindex@example-plugins": true } }, null, 2),
 )
 
 const { enabledPlugins } = await import("../dist/claude-plugins.js")
@@ -67,9 +67,9 @@ test("managed settings and managed drop-ins enable Claude plugins", () => {
   const enabled = enabledPlugins(projectDir)
   assert.deepEqual(
     enabled.map((plugin) => plugin.key).sort(),
-    ["base@legalzoom-plugins", "tsindex@legalzoom-plugins"],
+    ["base@example-plugins", "tsindex@example-plugins"],
   )
-  assert.equal(enabled.find((plugin) => plugin.key === "base@legalzoom-plugins")?.scope, "managed")
+  assert.equal(enabled.find((plugin) => plugin.key === "base@example-plugins")?.scope, "managed")
 })
 
 test("skill bridge replaces dangling links with current managed plugin targets", async () => {

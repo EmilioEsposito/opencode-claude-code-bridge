@@ -4,16 +4,37 @@
 
 OpenCode plugin that bridges Claude Code's MCP server configs and the skills bundled inside Claude Code plugins into OpenCode — so switching between the two CLIs (or running them side-by-side) doesn't require re-wiring anything.
 
+It also brings Claude Code's **skills-as-slash-commands** ergonomics to the OpenCode TUI: every discovered skill becomes a first-class `/<skill>` command you can type and autocomplete, just like in Claude Code.
+
 ## What it pulls in
 
 - **User-level MCP servers** from `~/.claude.json` (`mcpServers`).
 - **Project-level MCP servers** from `<cwd>/.mcp.json`. If `.claude/settings.json` explicitly declares `enabledMcpjsonServers`, that allowlist is respected; otherwise the local file is imported as-is.
 - **Plugin-bundled MCP servers** from any enabled Claude Code plugin (`~/.claude/plugins/installed_plugins.json` ∩ `enabledPlugins`).
 - **Plugin-bundled skills** — symlinked from `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/skills/<name>` into `~/.config/opencode/skills/<name>` (OpenCode already discovers skills at that location).
+- **Skills as TUI slash commands** — every discovered skill is surfaced as a first-class `/<skill>` slash command in the OpenCode **TUI**, for parity with Claude Code (see below).
 
 For MCP definitions that reference `${CLAUDE_PROJECT_DIR}`, the bridge resolves it to OpenCode's current project directory.
 
-Not yet supported (v1): bundled agents, slash commands, hooks.
+Not yet supported (v1): bundled agents, hooks.
+
+## Skills as slash commands (TUI parity with Claude Code)
+
+In Claude Code, every skill is also a typeable `/<skill>` slash command. OpenCode treats skills differently per client:
+
+- **Desktop** already renders skills as `/` slash entries natively.
+- **TUI** does **not** — its slash palette only lists `source: "command"` entries, so out of the box skills are reachable in the TUI only via the `/skills` picker, never as `/<skill>`.
+
+This plugin closes that gap. On non-Desktop clients (TUI, CLI `run`, headless) it injects a `source: "command"` wrapper for each discovered skill, so `/share`, `/list-repos`, etc. autocomplete in the TUI slash menu exactly like in Claude Code.
+
+Key properties:
+
+- **No duplicates in Desktop.** The plugin runs inside each client's own server process and gates on `OPENCODE_CLIENT`; under Desktop (`OPENCODE_CLIENT=desktop`) it injects nothing and leaves Desktop's native skill rendering untouched.
+- **No transcript spam.** The wrapper is a one-line *shim* — it tells the agent to invoke the skill via its `skill` tool and forwards your `$ARGUMENTS`. The skill body loads as the skill tool result, so `/share` doesn't dump the whole `SKILL.md` into your message. Typing `/list-repos --limit 20` forwards `--limit 20` to the skill.
+- **Covers every skill root**, not just plugin-bundled ones: `~/.config/opencode/skills` (global + bridged), `~/.claude/skills` (Claude Code "external" skills, e.g. those installed by other tooling), and `~/.agents/skills`.
+- **User config always wins.** A command you define yourself (or an OpenCode built-in) with the same name is never overwritten.
+
+This is config-hook injection only — no files are written to your `~/.config/opencode/command/` directory, so nothing leaks across clients or persists on disk.
 
 ## Install
 
@@ -39,6 +60,7 @@ What that means in practice:
 | Toggle a plugin in `enabledPlugins`                                   | OpenCode restart           |
 | Edit `enabledMcpjsonServers`                                          | OpenCode restart           |
 | Install a new Claude plugin (new entry in `installed_plugins.json`)   | OpenCode restart           |
+| Add/remove a skill (new `/<skill>` TUI slash command)                | OpenCode restart           |
 | Edit the contents of a skill file (e.g. `SKILL.md` body)              | Immediately — skills are symlinked, not copied |
 
 ## Conflict resolution
@@ -47,7 +69,14 @@ If you have an MCP server name declared in both your `opencode.jsonc` and Claude
 
 ## Debugging
 
-Set `OPENCODE_CLAUDE_CODE_BRIDGE_DEBUG=1` before launching OpenCode to log which MCPs and plugins were discovered.
+Set `OPENCODE_CLAUDE_CODE_BRIDGE_DEBUG=1` before launching OpenCode to log which MCPs, plugins, and skill command wrappers were discovered (the latter logs as `injected skill command wrappers: [...]`, or `desktop client — skipping…` under Desktop).
+
+To confirm a skill is now a slash command in the TUI, check that it appears with `source: "command"`:
+
+```bash
+opencode debug skill   # lists discovered skills
+# In the TUI, type `/` and your skill names should autocomplete.
+```
 
 ## Publishing
 

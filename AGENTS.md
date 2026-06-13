@@ -57,6 +57,24 @@ symlinking each enabled plugin's `skills/<name>/` into `~/.config/opencode/skill
 A manifest at `~/.local/state/opencode-claude-code-bridge/skill-bridge.json`
 tracks which symlinks we own so stale ones get cleaned up.
 
+Skills-as-slash-commands (`src/command-bridge.ts`) also runs in the `config`
+hook. OpenCode's TUI slash palette only renders entries with `source:
+"command"`; skills surface as `source: "skill"` and so don't appear there
+(Desktop renders skills natively). We mutate `cfg.command` to add a
+`source: "command"` wrapper per discovered skill. Two deliberate choices:
+
+- **Gate on `OPENCODE_CLIENT`.** The plugin runs in each client's own server
+  process. Under `OPENCODE_CLIENT=desktop` we inject nothing (Desktop already
+  renders skills as slash entries — injecting would replace that and risk
+  confusion). Every other client (TUI/CLI/headless) gets the wrappers.
+- **Shim, not body.** A command's `template` becomes the user's message text, so
+  inlining the `SKILL.md` body would dump it into the transcript. Instead the
+  template is a one-liner instructing the agent to invoke the skill via its
+  `skill` tool, with `$ARGUMENTS` forwarded. The body then loads as the skill
+  tool result. Injecting a command with the same name as a skill *replaces* the
+  skill entry in the `/command` list (so no duplicate), and we never overwrite a
+  pre-existing `cfg.command` entry.
+
 ## Testing changes
 
 ```bash
@@ -81,4 +99,5 @@ release commands, and post-publish verification.
 | `src/claude-plugins.ts` | Reads `installed_plugins.json`, filters by `enabledPlugins`, scans for bundled MCPs. |
 | `src/mcp-translate.ts` | Translates Claude `mcpServers` schema to OpenCode `mcp` schema. Handles `${VAR:-default}`. |
 | `src/skill-bridge.ts` | Symlinks plugin-bundled skills into `~/.config/opencode/skills/`. Idempotent. |
-| `src/paths.ts` | Centralizes all resolved paths (`CLAUDE_HOME`, state dir, skills dir, etc.). |
+| `src/command-bridge.ts` | Injects `source: "command"` shim wrappers so skills appear as `/<skill>` in the TUI palette. Gated to non-Desktop clients. |
+| `src/paths.ts` | Centralizes all resolved paths (`CLAUDE_HOME`, state dir, skills dir, `SKILL_ROOTS`, etc.). |

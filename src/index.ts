@@ -3,6 +3,7 @@ import { readUserMcp, readProjectMcp, readProjectSettings, filterProjectMcp } fr
 import { enabledPlugins, readPluginBundledMcp } from "./claude-plugins.js"
 import { translateAll, type OpencodeMcp } from "./mcp-translate.js"
 import { bridgeSkills } from "./skill-bridge.js"
+import { bridgeCommands, isDesktopClient } from "./command-bridge.js"
 
 const DEBUG = process.env.OPENCODE_CLAUDE_CODE_BRIDGE_DEBUG === "1"
 function log(...args: unknown[]): void {
@@ -47,6 +48,17 @@ const plugin: Plugin = async ({ directory }) => {
         log("injected mcp servers:", Object.keys(merged))
 
         bridgeSkills(enabledPlugins(directory))
+
+        // TUI/CLI clients don't render skills in the `/` slash palette the way
+        // Desktop does. Inject command wrappers so every discovered skill is a
+        // first-class `/<skill>` command there. Gated to non-Desktop clients to
+        // avoid duplicating Desktop's native skill rendering.
+        if (isDesktopClient()) {
+          log("desktop client — skipping skill→command wrappers (native rendering)")
+        } else {
+          const wrapped = bridgeCommands(cfg)
+          log("injected skill command wrappers:", wrapped)
+        }
       } catch (err) {
         console.error("[opencode-claude-code-bridge] failed to apply Claude config:", err)
       }
