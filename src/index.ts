@@ -6,6 +6,12 @@ import { bridgeSkills } from "./skill-bridge.js"
 import { bridgeCommands, isDesktopClient } from "./command-bridge.js"
 
 const DEBUG = process.env.OPENCODE_CLAUDE_CODE_BRIDGE_DEBUG === "1"
+
+export interface ClaudeCodeBridgeOptions {
+  /** Import Claude user, project, and plugin MCP definitions. Defaults to true. */
+  mcp?: boolean
+}
+
 function log(...args: unknown[]): void {
   if (DEBUG) console.log("[opencode-claude-code-bridge]", ...args)
 }
@@ -37,15 +43,21 @@ function collectClaudeMcp(cwd: string): Record<string, OpencodeMcp> {
   return translateAll(merged, { CLAUDE_PROJECT_DIR: cwd })
 }
 
-const plugin: Plugin = async ({ directory }) => {
+const plugin: Plugin = async ({ directory }, options) => {
+  const bridgeOptions = options as ClaudeCodeBridgeOptions | undefined
+
   return {
     config: async (cfg: any) => {
       try {
-        const merged = collectClaudeMcp(directory)
-        const existing = cfg.mcp ?? {}
-        // OpenCode-declared entries win on conflict — user's explicit config beats discovery.
-        cfg.mcp = { ...merged, ...existing }
-        log("injected mcp servers:", Object.keys(merged))
+        if (bridgeOptions?.mcp !== false) {
+          const merged = collectClaudeMcp(directory)
+          const existing = cfg.mcp ?? {}
+          // OpenCode-declared entries win on conflict — user's explicit config beats discovery.
+          cfg.mcp = { ...merged, ...existing }
+          log("injected mcp servers:", Object.keys(merged))
+        } else {
+          log("Claude MCP import disabled by plugin option")
+        }
 
         bridgeSkills(enabledPlugins(directory))
 

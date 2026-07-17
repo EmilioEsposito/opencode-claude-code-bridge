@@ -62,6 +62,7 @@ await writeFile(
 
 const { enabledPlugins } = await import("../dist/claude-plugins.js")
 const { bridgeSkills } = await import("../dist/skill-bridge.js")
+const { default: claudeCodeBridge } = await import("../dist/index.js")
 
 test("managed settings and managed drop-ins enable Claude plugins", () => {
   const enabled = enabledPlugins(projectDir)
@@ -83,4 +84,20 @@ test("skill bridge replaces dangling links with current managed plugin targets",
   assert.equal(realpathSync(staleLink), realpathSync(basePlugin))
   assert.equal(realpathSync(join(globalSkills, "tsindex")), realpathSync(tsindexPlugin))
   assert.equal(existsSync(join(xdgState, "opencode-claude-code-bridge", "skill-bridge.json")), true)
+})
+
+test("mcp=false preserves explicit OpenCode MCPs while continuing to bridge skills", async () => {
+  process.env.OPENCODE_CLIENT = "desktop"
+  const hooks = await claudeCodeBridge({ directory: projectDir }, { mcp: false })
+  const cfg = {
+    mcp: {
+      explicit: { type: "remote", url: "https://example.com/mcp", enabled: true },
+    },
+  }
+
+  await hooks.config(cfg)
+
+  assert.deepEqual(Object.keys(cfg.mcp), ["explicit"])
+  assert.equal(realpathSync(join(xdgConfig, "opencode", "skills", "list-repos")), realpathSync(basePlugin))
+  delete process.env.OPENCODE_CLIENT
 })

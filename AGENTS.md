@@ -47,9 +47,11 @@ above uses `$(pwd)` so it always picks up the current location).
 ## How the plugin works
 
 OpenCode plugins can return a `config` hook that receives the resolved config
-object by reference. We mutate `cfg.mcp` to inject Claude Code's MCP server
-definitions before OpenCode's MCP service reads them. This works because MCP
-clients are constructed lazily on first tool call, after the config hook has run.
+object by reference. By default, we mutate `cfg.mcp` to inject Claude Code's MCP
+server definitions before OpenCode's MCP service reads them. This works because
+MCP clients are constructed lazily on first tool call, after the config hook has
+run. The plugin option `{ "mcp": false }` skips all MCP discovery and mutation
+while preserving skill and slash-command bridging.
 
 Skills are handled differently: OpenCode scans fixed directories for `SKILL.md`
 files but doesn't look inside Claude plugin cache dirs. We bridge this by
