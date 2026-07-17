@@ -46,6 +46,19 @@ Add the plugin to your OpenCode config (`~/.config/opencode/opencode.jsonc` or p
 }
 ```
 
+If OpenCode already has an authoritative MCP catalog and you only want Claude
+plugin skills and slash-command parity, disable Claude MCP discovery:
+
+```jsonc
+{
+  "plugin": [["opencode-claude-code-bridge@latest", { "mcp": false }]]
+}
+```
+
+This leaves explicit OpenCode MCP entries untouched and skips user-level,
+project-level, and Claude-plugin-bundled MCP imports. Skill bridging remains
+enabled. MCP import defaults to `true` for backward compatibility.
+
 OpenCode will install it from npm on next start. The `@latest` tag ensures you automatically get new versions on each restart ([ref](https://github.com/anomalyco/opencode/issues/6159#issuecomment-3691647738)). To pin a specific version instead, use e.g. `"opencode-claude-code-bridge@0.1.1"`.
 
 ## When does OpenCode pick up Claude Code changes?
